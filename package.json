@@ -1,0 +1,19 @@
+{
+  "name": "compasscar",
+  "version": "1.0.0",
+  "description": "A simple car API for managing cars and their features, built with Node.js and MySQL",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Iris Almeida",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.20.0",
+    "mysql2": "^3.11.1"
+  }
+}

@@ -54,3 +54,21 @@ exports.createCar = (req, res) => {
     });
   });
 };
+
+exports.getCars = (req, res) => {
+  const query = 'SELECT * FROM cars';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching cars:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(204).json({ message: 'No cars found' });
+    }
+
+    res.status(200).json({ data: results });
+  });
+};
+

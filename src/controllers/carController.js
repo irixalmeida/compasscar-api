@@ -162,36 +162,44 @@ exports.updateCar = (req, res) => {
   const carId = req.params.id;
   const { brand, model, year, items } = req.body;
 
-  
-  const checkQuery = 'SELECT * FROM cars WHERE id = ?';
+  const checkQuery = "SELECT * FROM cars WHERE id = ?";
   db.query(checkQuery, [carId], (err, result) => {
     if (err) {
-      console.error('Error fetching car:', err);
-      return res.status(500).json({ error: 'Database error' });
+      console.error("Error fetching car:", err);
+      return res.status(500).json({ error: "Database error" });
     }
     if (result.length === 0) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: "Car not found" });
     }
 
-    
     const currentYear = new Date().getFullYear();
     if (year && (year < currentYear - 10 || year > currentYear)) {
-      return res.status(400).json({ error: `Year should be between ${currentYear - 10} and ${currentYear}` });
+      return res
+        .status(400)
+        .json({
+          error: `Year should be between ${
+            currentYear - 10
+          } and ${currentYear}`,
+        });
     }
 
-    
-    const duplicateCheckQuery = 'SELECT * FROM cars WHERE brand = ? AND model = ? AND year = ? AND id != ?';
-    db.query(duplicateCheckQuery, [brand, model, year, carId], (err, duplicateResult) => {
-      if (err) {
-        console.error('Error checking for duplicates:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (duplicateResult.length > 0) {
-        return res.status(409).json({ error: 'There is already a car with this data' });
-      }
+    const duplicateCheckQuery =
+      "SELECT * FROM cars WHERE brand = ? AND model = ? AND year = ? AND id != ?";
+    db.query(
+      duplicateCheckQuery,
+      [brand, model, year, carId],
+      (err, duplicateResult) => {
+        if (err) {
+          console.error("Error checking for duplicates:", err);
+          return res.status(500).json({ error: "Database error" });
+        }
+        if (duplicateResult.length > 0) {
+          return res
+            .status(409)
+            .json({ error: "There is already a car with this data" });
+        }
 
-      
-      const updateQuery = `
+        const updateQuery = `
         UPDATE cars SET 
           brand = COALESCE(?, brand), 
           model = COALESCE(?, model), 
@@ -199,43 +207,50 @@ exports.updateCar = (req, res) => {
         WHERE id = ?
       `;
 
-      db.query(updateQuery, [brand || null, model || null, year || null, carId], (err) => {
-        if (err) {
-          console.error('Error updating car:', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-
-        
-        if (items && Array.isArray(items) && items.length > 0) {
-          
-          const uniqueItems = [...new Set(items)];
-
-          
-          const deleteItemsQuery = 'DELETE FROM cars_items WHERE car_id = ?';
-          db.query(deleteItemsQuery, [carId], (err) => {
+        db.query(
+          updateQuery,
+          [brand || null, model || null, year || null, carId],
+          (err) => {
             if (err) {
-              console.error('Error deleting items:', err);
-              return res.status(500).json({ error: 'Error deleting items' });
+              console.error("Error updating car:", err);
+              return res.status(500).json({ error: "Database error" });
             }
 
-            const insertItemsQuery = 'INSERT INTO cars_items (name, car_id) VALUES ?';
-            const itemsData = uniqueItems.map(item => [item, carId]);
+            if (items && Array.isArray(items) && items.length > 0) {
+              const uniqueItems = [...new Set(items)];
 
-            db.query(insertItemsQuery, [itemsData], (err) => {
-              if (err) {
-                console.error('Error inserting items:', err);
-                return res.status(500).json({ error: 'Error inserting items' });
-              }
+              const deleteItemsQuery =
+                "DELETE FROM cars_items WHERE car_id = ?";
+              db.query(deleteItemsQuery, [carId], (err) => {
+                if (err) {
+                  console.error("Error deleting items:", err);
+                  return res
+                    .status(500)
+                    .json({ error: "Error deleting items" });
+                }
 
-              return res.status(204).send();  
-            });
-          });
-        } else {
-          
-          res.status(204).send();
-        }
-      });
-    });
+                const insertItemsQuery =
+                  "INSERT INTO cars_items (name, car_id) VALUES ?";
+                const itemsData = uniqueItems.map((item) => [item, carId]);
+
+                db.query(insertItemsQuery, [itemsData], (err) => {
+                  if (err) {
+                    console.error("Error inserting items:", err);
+                    return res
+                      .status(500)
+                      .json({ error: "Error inserting items" });
+                  }
+
+                  return res.status(204).send();
+                });
+              });
+            } else {
+              res.status(204).send();
+            }
+          }
+        );
+      }
+    );
   });
 };
 
